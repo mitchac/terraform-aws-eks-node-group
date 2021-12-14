@@ -4,6 +4,10 @@ locals {
   node_role_policy_arns = sort(var.node_role_policy_arns)
 }
 
+resource "random_string" "pass" {
+  length  = 10
+}
+
 data "aws_partition" "current" {
   count = local.create_role ? 1 : 0
 }
@@ -24,7 +28,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_iam_role" "default" {
   count                = local.create_role ? 1 : 0
-  name                 = module.label.id
+  name                 = join(module.label.id,pass)
   assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
   permissions_boundary = var.node_role_permissions_boundary
   tags                 = module.label.tags
@@ -57,7 +61,7 @@ resource "aws_iam_role_policy_attachment" "existing_policies_for_eks_workers_rol
 # s3 bucket access
 
 resource "aws_iam_policy" "s3_bucket_access" {
-  name        = "${module.label.id}-s3a"
+  name        = join(module.label.id,pass,"-s3a")
   description = "IAM policy for s3 bucket access"
   #path        = var.path
   policy      = data.aws_iam_policy_document.s3_bucket_access.json
