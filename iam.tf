@@ -53,3 +53,31 @@ resource "aws_iam_role_policy_attachment" "existing_policies_for_eks_workers_rol
   policy_arn = local.node_role_policy_arns[count.index]
   role       = join("", aws_iam_role.default.*.name)
 }
+
+# s3 bucket access
+
+resource "aws_iam_policy" "s3_bucket_access" {
+  name        = "${module.label.id}-s3a"
+  description = "IAM policy for s3 bucket access"
+  #path        = var.path
+  policy      = data.aws_iam_policy_document.s3_bucket_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "s3_bucket_access" {
+  policy_arn = aws_iam_policy.s3_bucket_access.arn
+  role       = join("", aws_iam_role.default.*.name)
+}
+
+data "aws_iam_policy_document" "s3_bucket_access" {
+  statement {
+    sid       = ""
+    effect    = "Allow"
+    resources = [
+        "arn:aws:s3:::batch-artifact-repository-401305384268",
+        "arn:aws:s3:::batch-artifact-repository-401305384268/*",
+        "arn:aws:s3:::singlem-results-us-east-2",
+        "arn:aws:s3:::singlem-results-us-east-2/*"
+        ]
+    actions = ["s3:*"]
+  }
+}
